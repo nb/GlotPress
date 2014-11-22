@@ -99,8 +99,10 @@ function gp_create_initial_contents( $user_name =  null, $admin_password = null,
 	global $gpdb;
 
 	$gpdb->insert( $gpdb->projects, array( 'name' => __('Sample'), 'slug' => __('sample'), 'description' => __('A Sample Project'), 'path' => __('sample') ) );
-	$gpdb->insert( $gpdb->originals, array( 'project_id' => 1, 'singular' => __('GlotPress FTW'), 'comment' => __('FTW means For The Win'), 'context' => 'dashboard', 'references' => 'bigfile:666 little-dir/small-file.php:71' ) );
-	$gpdb->insert( $gpdb->originals, array( 'project_id' => 1, 'singular' => __('A GlotPress'), 'plural' => __('Many GlotPresses') ) );
+	$gpdb->insert( $gpdb->originals, array( 'singular' => __('GlotPress FTW'), 'comment' => __('FTW means For The Win'), 'context' => 'dashboard' ) );
+	$gpdb->insert( $gpdb->project_original, array ( 'project_id' => 1, 'original_id' => 1, 'references' => 'bigfile:666 little-dir/small-file.php:71', 'active' => 1 ) );
+	$gpdb->insert( $gpdb->originals, array( 'singular' => __('A GlotPress'), 'plural' => __('Many GlotPresses') ) );
+	$gpdb->insert( $gpdb->project_original, array ( 'project_id' => 1, 'original_id' => 2, 'active' => 1 ) );
 
 	$gpdb->insert( $gpdb->translation_sets, array( 'name' => __('My Translation'), 'slug' => __('my'), 'project_id' => 1, 'locale' => 'bg', ) );
 
