@@ -189,7 +189,7 @@ function gp_schema_get() {
 	$gp_schema['project_original'] = "CREATE TABLE IF NOT EXISTS `$gpdb->project_original` (
 		`project_id` INT(10) NOT NULL,
 		`original_id` INT(10) NOT NULL,
-		`active` TINYINT(1) DEFAULT 0,
+		`active` TINYINT(1) DEFAULT 1,
 		`references` TEXT DEFAULT NULL,
 		PRIMARY KEY (`project_id`, `original_id`)
 	);";
