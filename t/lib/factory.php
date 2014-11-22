@@ -69,6 +69,13 @@ class GP_UnitTest_Factory_For_Original extends GP_UnitTest_Factory_For_Thing {
 			'singular' => new GP_UnitTest_Generator_Sequence( 'Original %s' ),
 		);
 	}
+
+	function create_for_project( $project_id, $fields = array() ) {
+		global $gpdb;
+		$original = $this->create( $fields );
+		$gpdb->insert( $gpdb->project_original, array( 'project_id' => $project_id, 'original_id' => $original->id ) );
+		return $original;
+	}
 }
 
 class GP_UnitTest_Factory_For_Translation extends GP_UnitTest_Factory_For_Thing {
@@ -80,7 +87,7 @@ class GP_UnitTest_Factory_For_Translation extends GP_UnitTest_Factory_For_Thing 
 	}
 
 	function create_with_original_for_translation_set( $set, $args = array() ) {
-		$original = $this->factory->original->create( array( 'project_id' => $set->project_id ) );
+		$original = $this->factory->original->create_for_project( $set->project_id );
 		$translation = $this->create( array_merge( $args, array( 'original_id' => $original->id, 'translation_set_id' => $set->id ) ) );
 		$translation->original = $original;
 		$translation->translation_set = $set;
