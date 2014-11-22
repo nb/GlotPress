@@ -185,6 +185,14 @@ function gp_schema_get() {
 		UNIQUE KEY `api_key` (`api_key`)
 	);";
 
+	// project_original
+	$gp_schema['project_original'] = "CREATE TABLE IF NOT EXISTS `$gpdb->project_original` (
+		`project_id` INT(10) NOT NULL,
+		`original_id` INT(10) NOT NULL,
+		`active` TINYINT(1) DEFAULT 0,
+		`references` TEXT DEFAULT NULL,
+		PRIMARY KEY (`project_id`, `original_id`)
+	);";
 	$gp_schema = apply_filters( 'gp_schema_pre_charset', $gp_schema );
 
 	// Set the charset and collation on each table

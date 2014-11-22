@@ -143,7 +143,7 @@ $gpdb = new $gpdb_class( array(
 ) );
 unset( $gpdb_class );
 
-$gpdb->table_names = array('translations', 'translation_sets', 'glossaries', 'glossary_entries', 'originals', 'projects', 'users', 'usermeta', 'meta', 'permissions', 'api_keys', );
+$gpdb->table_names = array('translations', 'translation_sets', 'glossaries', 'glossary_entries', 'originals', 'projects', 'users', 'usermeta', 'meta', 'permissions', 'api_keys', 'project_original', );
 foreach( $gpdb->table_names as $table ) {
 	$gpdb->tables[$table] = false;
 }
