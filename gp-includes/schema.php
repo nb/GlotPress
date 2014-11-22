@@ -61,17 +61,13 @@ function gp_schema_get() {
 	 */
 	$gp_schema['originals'] = "CREATE TABLE IF NOT EXISTS `$gpdb->originals` (
 		`id` INT(10) NOT NULL auto_increment,
-		`project_id` INT(10) DEFAULT NULL,
 		`context` VARCHAR(255) DEFAULT NULL,
 		`singular` TEXT NOT NULL,
 		`plural` TEXT DEFAULT NULL,
-		`references` TEXT DEFAULT NULL,
 		`comment` TEXT DEFAULT NULL,
-		`status` VARCHAR(255) NOT NULL DEFAULT '+active',
 		`priority` TINYINT NOT NULL DEFAULT 0,
 		`date_added` DATETIME DEFAULT NULL,
 		PRIMARY KEY (`id`),
-		KEY `project_id_status` (`project_id`, `status`),
 		KEY `singular_plural_context` (`singular`(83), `plural`(83), `context`(83))
 	);";
 
