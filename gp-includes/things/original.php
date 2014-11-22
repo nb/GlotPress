@@ -33,7 +33,8 @@ class GP_Original extends GP_Thing {
 	}
 
 	function by_project_id( $project_id ) {
-		return $this->many( "SELECT * FROM $this->table WHERE project_id= %d AND status = '+active'", $project_id );
+		global $gpdb;
+		return $this->many( "SELECT * FROM $this->table AS o INNER JOIN $gpdb->project_original AS po ON o.id = po.original_id WHERE po.project_id= %d AND po.active = 1", $project_id );
 	}
 
 	function count_by_project_id( $project_id ) {
