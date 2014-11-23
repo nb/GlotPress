@@ -22,7 +22,7 @@ class GP_Test_Thing_Translation_set extends GP_UnitTestCase {
 		$wp_auth_object->set_current_user( $user->id );
 
 		$set = $this->factory->translation_set->create_with_project_and_locale();
-		$this->factory->original->create( array( 'project_id' => $set->project->id, 'status' => '+active', 'singular' => 'A string' ) );
+		$this->factory->original->create_for_project( $set->project->id, array( 'singular' => 'A string' ) );
 
 		$translations_for_import = new Translations;
 		$translations_for_import->add_entry( array( 'singular' => 'A string','translations' => array( 'baba' ) ) );
@@ -34,8 +34,8 @@ class GP_Test_Thing_Translation_set extends GP_UnitTestCase {
 
 	function test_import_should_save_fuzzy() {
 		$set = $this->factory->translation_set->create_with_project_and_locale();
-		$this->factory->original->create( array( 'project_id' => $set->project->id, 'status' => '+active', 'singular' => 'A string' ) );
-		$this->factory->original->create( array( 'project_id' => $set->project->id, 'status' => '+active', 'singular' => 'Second string' ) );
+		$this->factory->original->create_for_project( $set->project->id, array( 'singular' => 'A string' ) );
+		$this->factory->original->create_for_project( $set->project->id, array( 'singular' => 'Second string' ) );
 
 		$translations_for_import = new Translations;
 		$translations_for_import->add_entry( array( 'singular' => 'A string', 'translations' => array( 'baba' ), 'flags' => array('fuzzy' ) ) );
@@ -63,7 +63,7 @@ class GP_Test_Thing_Translation_set extends GP_UnitTestCase {
 
 	function test_import_should_import_over_existing_different_translation_by_default() {
 		$set = $this->factory->translation_set->create_with_project_and_locale();
-		$original = $this->factory->original->create( array( 'project_id' => $set->project->id, 'status' => '+active', 'singular' => 'A string' ) );
+		$original = $this->factory->original->create_for_project( $set->project->id, array( 'singular' => 'A string' ) );
 		$translation = $this->factory->translation->create( array( 'translation_set_id' => $set->id, 'original_id' => $original->id, 'translations' => array( 'baba' ), 'status' => 'current' ) );
 
 		$translations_for_import = new Translations;

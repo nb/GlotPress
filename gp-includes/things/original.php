@@ -48,17 +48,16 @@ class GP_Original extends GP_Thing {
 	}
 
 
-	function by_project_id_and_entry( $project_id, $entry, $status = null ) {
+	function by_project_id_and_entry( $project_id, $entry, $active = null ) {
 		global $gpdb;
 		$where = array();
 		// now each condition has to contain a %s not to break the sequence
 		$where[] = is_null( $entry->context )? '(context IS NULL OR %s IS NULL)' : 'BINARY context = %s';
 		$where[] = 'BINARY singular = %s';
 		$where[] = is_null( $entry->plural )? '(plural IS NULL OR %s IS NULL)' : 'BINARY plural = %s';
-		$where[] = 'project_id = %d';
-		if ( !is_null( $status ) ) $where[] = $gpdb->prepare( 'status = %s', $status );
+		if ( !is_null( $status ) ) $where[] = $gpdb->prepare( 'active = %d', $active );
 		$where = implode( ' AND ', $where );
-		return $this->one( "SELECT * FROM $this->table WHERE $where", $entry->context, $entry->singular, $entry->plural, $project_id );
+		return $this->one( "SELECT * FROM $this->table AS o INNER JOIN $gpdb->project_original AS po ON o.id = po.original_id AND po.project_id = %d WHERE $where", $project_id, $entry->context, $entry->singular, $entry->plural );
 	}
 
 	function import_for_project( $project, $translations ) {
@@ -67,7 +66,7 @@ class GP_Original extends GP_Thing {
 
 		$originals_added = $originals_existing = $originals_obsoleted = 0;
 
-		$all_originals_for_project = $this->many_no_map( "SELECT * FROM $this->table WHERE project_id= %d", $project->id );
+		$all_originals_for_project = $this->many_no_map( "SELECT o.*, po.* FROM $this->table AS o INNER JOIN $gpdb->project_original AS po ON o.id = po.original_id WHERE po.project_id= %d", $project->id );
 		$originals_by_key = array();
 		foreach( $all_originals_for_project as $original ) {
 			$entry = new Translation_Entry( array( 'singular' => $original->singular, 'plural' => $original->plural, 'context' => $original->context ) );
@@ -76,31 +75,46 @@ class GP_Original extends GP_Thing {
 
 		foreach( $translations->entries as $entry ) {
 			$gpdb->queries = array();
-			$data = array('project_id' => $project->id, 'context' => $entry->context, 'singular' => $entry->singular,
-				'plural' => $entry->plural, 'comment' => $entry->extracted_comments,
-				'references' => implode( ' ', $entry->references ), 'status' => '+active' );
-			$data = apply_filters( 'import_original_array', $data );
+			$original_data = array( 'context' => $entry->context, 'singular' => $entry->singular,
+				'plural' => $entry->plural, 'comment' => $entry->extracted_comments );
+			$project_data = array(
+				'references' => implode( ' ', $entry->references ),
+				'active' => 1,
+			);
+			$original_data = apply_filters( 'import_original_array', $original_data );
+			$original_data = apply_filters( 'import_original_data_array', $original_data );
+			$project_data = apply_filters( 'import_project_data_array', $project_data );
 
 			// TODO: do not obsolete similar translations
 			if ( isset( $originals_by_key[$entry->key()] ) ) {
 				$original = $originals_by_key[$entry->key()];
 
-				if ( GP::$original->is_different_from( $data, $original ) ) {
-					$this->update( $data, array( 'id' => $original->id ) );
+				// we are using != instead of !== on purpose, falsy values can be very different
+				// also, false positives are OK< because they will only cost us an extra update
+				if ( $original_data['comment'] != $original->comment ) {
+					$this->update( array( 'comment' => $original_data['comment'] ) , array( 'id' => $original->id ) );
+				}
+
+				if ( $project_data['references'] != $original->references || $project_data['active'] != $original->active ) {
+					$gpdb->update( $gpdb->project_original,
+						array( 'references' => $project_data['references'], 'active' => (int)$project_data['active'] ),
+						array( 'project_id' => $project->id, 'original_id' => $original->id )
+					);
 				}
 
 				$originals_existing++;
 			}
 			else {
-				GP::$original->create( $data );
+				$new_original = GP::$original->create( $original_data );
+				$gpdb->insert( $gpdb->project_original, array_merge( $project_data, array( 'project_id' => $project->id, 'original_id' => $new_original->id ) ) );
 				$originals_added++;
 			}
 		}
 
 		// Mark previously active, but now removed strings as obsolete
 		foreach ( $originals_by_key as $key => $value) {
-			if ( ! key_exists( $key, $translations->entries ) && '-obsolete' != $value->status ) {
-				$this->update( array('status' => '-obsolete'), array( 'id' => $value->id ) );
+			if ( ! key_exists( $key, $translations->entries ) && $value->active ) {
+				$gpdb->update( $gpdb->project_original, array( 'active' => 0 ), array( 'original_id' => $value->id, 'project_id' => $project->id ) );
 				$originals_obsoleted++;
 			}
 		}
@@ -113,14 +127,6 @@ class GP_Original extends GP_Thing {
 		do_action( 'originals_imported', $project->id, $originals_added, $originals_existing, $originals_obsoleted );
 
 		return array( $originals_added, $originals_existing );
-	}
-
-	function is_different_from( $data, $original = null ) {
-		if ( !$original ) $original = $this;
-		foreach( $data as $field => $value ) {
-			if ( $original->$field != $value ) return true;
-		}
-		return false;
 	}
 
 	function priority_by_name( $name ) {
